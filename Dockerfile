@@ -8,7 +8,7 @@ MAINTAINER Tim Dettrick <t.dettrick@uq.edu.au>
 # - nltk.draw dependencies
 RUN apt-get update && \
   apt-get install -y \
-    python3-pip python3-all-dev \
+    python3-pip python3-all-dev gfortran \
     libblas-dev liblapack-dev \
     libpng-dev libfreetype6-dev \
     libhdf5-dev \
@@ -22,9 +22,6 @@ RUN apt-get update && \
 
 RUN pip3 install ipython jupyter
 RUN pip3 install numpy pandas matplotlib gitpython
-RUN apt-get update && \
-  apt-get install -y gfortran && \
-  apt-get clean
 RUN pip3 install scipy netCDF4
 RUN pip3 install numexpr cython
 RUN pip3 install tables
