@@ -1,80 +1,35 @@
-# DOCKER-VERSION 1.0
-FROM dit4c/dit4c-container-base:latest
-MAINTAINER t.dettrick@uq.edu.au
+FROM dit4c/dit4c-container-base:debian
+MAINTAINER Tim Dettrick <t.dettrick@uq.edu.au>
 
-# Install
-# - build dependencies for Python PIP
-# - ccache to make building faster
-# - virtualenv to setup python environment
-# - matplotlib dependencies
-# - scipy dependencies
-# - pytables dependencies
-# - netcdf4 dependencies
-# - nltk dependencies
-# - Xvfb for Python modules requiring X11
-# - GhostScript & ImageMagick for image manipulation
-RUN rpm --rebuilddb && yum install -y \
-  gcc gcc-c++ python34-devel \
-  ccache \
-  blas-devel lapack-devel \
-  libpng-devel freetype-devel \
-  hdf5-devel \
-  netcdf-devel \
-  libyaml-devel tkinter \
-  xorg-x11-server-Xvfb \
-  ghostscript ImageMagick
+# install
+# - Python 3, PIP and dependencies
+# - Xvfb for background X11 rendering
+# - matplotlib
+# - nltk.draw dependencies
+RUN apt-get update && \
+  apt-get install -y \
+    python3-pip python3-all-dev \
+    libblas-dev liblapack-dev \
+    libpng-dev libfreetype6-dev \
+    libhdf5-dev \
+    libnetcdf-dev \
+    libyaml-dev \
+    ghostscript imagemagick \
+    xvfb \
+    python3-matplotlib \
+    python3-tk && \
+  apt-get clean
 
-RUN mkdir /opt/ipython && mkdir /opt/python && \
-    chown researcher:researcher /opt/ipython && \
-    chown researcher:researcher /opt/python
+RUN pip3 install ipython jupyter
+RUN pip3 install numpy pandas matplotlib gitpython
+RUN apt-get update && \
+  apt-get install -y gfortran && \
+  apt-get clean
+RUN pip3 install scipy netCDF4
+RUN pip3 install numexpr cython
+RUN pip3 install tables
 
-USER researcher
-
-# Install system-indepedent python environment
-RUN pyvenv-3.4 --without-pip /opt/python && \
-  cd /tmp && \
-  curl -L -s https://bootstrap.pypa.io/get-pip.py | /opt/python/bin/python
-
-# Install from PIP, using ccache to speed build
-# - Updates for setuptools, pip & wheels
-# - Notebook dependencies
-# - IPython (with notebook)
-# - Readline for usability
-# - Missing IPython dependencies
-# - Useful IPython libraries
-# - SciPy & netCDF4 (which expect numpy to be installed first)
-RUN source /opt/python/bin/activate && \
-  PATH=/usr/lib64/ccache:$PATH && \
-  pip install --upgrade pip wheel && \
-  pip install \
-    tornado pyzmq jinja2 \
-    ipython jupyter \
-    jsonschema \
-    ipythonblocks numpy pandas matplotlib gitpython && \
-  pip install scipy netCDF4 && \
-  pip install numexpr cython && \
-  pip install tables && \
-  ccache --show-stats && \
-  ccache --clear && \
-  rm -rf /home/researcher/.cache
-
-# Install NLTK, textblob & pyStatParser
-RUN /opt/python/bin/pip install nltk textblob pyyaml && \
-  /opt/python/bin/pip install git+https://github.com/emilmont/pyStatParser.git@master#egg=pyStatParser && \
-  rm -rf /home/researcher/.cache
-
-# Create IPython profile
-RUN IPYTHONDIR=/opt/ipython /opt/python/bin/ipython profile create default && \
-  rm -rf /home/researcher/.ipython
-
-USER root
-
-# Add supporting files (directory at a time to improve build speed)
 COPY etc /etc
-COPY opt /opt
 COPY var /var
 
-RUN chown -R researcher:researcher /opt/ipython
-
-# Check nginx config is OK
-RUN nginx -t
+RUN su - researcher -c "mkdir -p ~/.jupyter && echo \"c.NotebookApp.base_url = '/jupyter'\" > ~/.jupyter/jupyter_notebook_config.py"
