@@ -28,6 +28,7 @@ RUN apt-get update && \
 RUN pip3 install scipy netCDF4
 RUN pip3 install numexpr cython
 RUN pip3 install tables
+RUN pip3 install seaborn
 
 COPY etc /etc
 COPY var /var
