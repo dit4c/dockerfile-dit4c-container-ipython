@@ -16,6 +16,7 @@ RUN apt-get update && \
     libyaml-dev \
     ghostscript imagemagick \
     xvfb \
+    sqlite3 \
     python3-matplotlib \
     python3-tk && \
   apt-get clean
