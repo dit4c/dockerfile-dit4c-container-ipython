@@ -21,6 +21,7 @@ RUN apt-get update && \
     python3-tk && \
   apt-get clean
 
+RUN pip3 install --upgrade packaging appdirs
 RUN pip3 install ipython jupyter
 RUN pip3 install numpy pandas matplotlib gitpython
 RUN pip3 install scipy netCDF4
